@@ -149,8 +149,14 @@ def process_directory(path, recursive=False, rotatedSuffix=''):
 #         print(folderpath + " directory has been created.")
 #     return folderpath
 
+
+#####################################
+### TODO: recursive does not work ###
+#####################################
+
+parser = argparse.ArgumentParser()
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
     parser.add_argument('--dir', '-d', nargs='+')
     parser.add_argument('--recursive', '-r', action='store_true')
     parser.add_argument('--file', '-f', nargs='+')
