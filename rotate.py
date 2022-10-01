@@ -17,7 +17,7 @@ output_directory = ''
 
 picture_re = re.compile(r'.*\.jpg$', re.IGNORECASE)
 
-def autorotate(pic_path):
+def autorotate(pic_path, rotatedSuffix):
     """ This function autorotates a picture """
      
     # Uncomment the line below to provide path to tesseract manually
@@ -29,10 +29,11 @@ def autorotate(pic_path):
     #pic_array = np.array(imagex)
 
     # Read image from URL
-    #   Taken from https://stackoverflow.com/questions/21061814/how-can-i-read-an-image-from-an-internet-url-in-python-cv2-scikit-image-and-mah
+    # Taken from https://stackoverflow.com/questions/21061814/how-can-i-read-an-image-from-an-internet-url-in-python-cv2-scikit-image-and-mah
     # https://i.ibb.co/4mm9WvZ/book-rot.jpg
     # https://i.ibb.co/M7jwWR2/book.jpg
     # https://i.ibb.co/27bKNJ8/book-rot2.jpg
+    #
     #resp = urllib.request.urlopen('https://i.ibb.co/27bKNJ8/book-rot2.jpg')
     #image = np.asarray(bytearray(resp.read()), dtype="uint8")
 
@@ -57,6 +58,17 @@ def autorotate(pic_path):
     if angle > 0:
         angle = 360 - angle
     print("[ANGLE] " + str(angle))
+
+
+    # ANOTHER METHOD, BUT SIZE OF FILE SEEMS TO BE EVEN WORSE
+    # #################
+    # #################
+    # rotated_yolo = imagex.rotate(angle, expand=True)
+    # write_path = output_directory + os.path.basename(pic_path)[:-4] + '_rotated' '.jpg'
+    # rotated_yolo.save(write_path, subsampling=0, quality=100)
+
+    # #################
+    # #################
     
     # rotate the image to deskew it
     ##################################
@@ -89,7 +101,7 @@ def autorotate(pic_path):
     #print(pytesseract.image_to_osd(rotated));
 
     #Rotated image can be saved here
-    write_path = output_directory + os.path.basename(pic_path)[:-4] + '_rotated' '.jpg'
+    write_path = output_directory + os.path.basename(pic_path)[:-4] + rotatedSuffix + '.jpg'
     print(write_path)
     # Do not forget to convert from BRG to RGB
     cv2.imwrite(write_path, cv2.cvtColor(rotated, cv2.COLOR_RGB2BGR))
@@ -103,7 +115,7 @@ def autorotate(pic_path):
 
 
 
-def process_directory(path, recursive=False):
+def process_directory(path, recursive=False, rotatedSuffix=''):
     """ This function processes all elements from a directory """
 
     if not os.path.isdir(path):
@@ -121,21 +133,21 @@ def process_directory(path, recursive=False):
                     #for i in range(2): # for some reason, I have to do it twice
                     #    if autorotate(elt_path):
                     #        print 'autorotate: %s/%s' % (path, elt)
-                    autorotate(elt_path)
+                    autorotate(elt_path, rotatedSuffix)
 
 
-def getOutputFolder(fullpath, path='./', output_folder='rotated/'):
-    #Create the output folder if it does not exist
-    if fullpath == (None or 0):
-        folderpath = path + output_folder
-    else:
-        folderpath = fullpath
+# def getOutputFolder(fullpath, path='./', output_folder='rotated/'):
+#     #Create the output folder if it does not exist
+#     if fullpath == (None or 0):
+#         folderpath = path + output_folder
+#     else:
+#         folderpath = fullpath
 
-    folderExists = os.path.exists(folderpath)
-    if not folderExists:
-        os.makedirs(folderpath)
-        print(folderpath + " directory has been created.")
-    return folderpath
+#     folderExists = os.path.exists(folderpath)
+#     if not folderExists:
+#         os.makedirs(folderpath)
+#         print(folderpath + " directory has been created.")
+#     return folderpath
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -143,6 +155,8 @@ if __name__ == '__main__':
     parser.add_argument('--recursive', '-r', action='store_true')
     parser.add_argument('--file', '-f', nargs='+')
     parser.add_argument('--output', '-o', nargs='+')
+    parser.add_argument('--rewrite', '-rw', action='store_true')
+    parser.add_argument('--suffix', '-s', action='store_true')
     args = parser.parse_args()
 
     #Create the output folder if it does not exist
@@ -158,7 +172,12 @@ if __name__ == '__main__':
         else:
             raise Exception('ERROR')
 
-    output_directory = output_directory + 'rotated/'
+    if args.rewrite == False:
+        print("Rewrite: OFF")
+        output_directory = output_directory + 'rotated/'
+    else:
+        print("Rewrite: ON")
+
     folderExists = os.path.exists(output_directory)
     if not folderExists:
         os.makedirs(output_directory)
@@ -167,7 +186,11 @@ if __name__ == '__main__':
     if args.dir != None:
         if len(args.dir) >= 1:
             for d in args.dir:
-                process_directory(d, args.recursive)
+                if args.suffix == False:
+                    process_directory(d, args.recursive)
+                else:
+                    process_directory(d, args.recursive, '_rotated')
+
     elif args.file != None:
         for f in args.file:
             autorotate(f)    
